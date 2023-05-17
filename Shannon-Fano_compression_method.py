@@ -1,5 +1,5 @@
 # This code use Shannon Fano Coding in order to compress word 
-# basicly this method uses 5 step process which is:
+# basicly this method uses 5-step process which is:
 # LIST -> SORT -> DIVIDE -> LABEL -> REPEAT
 import collections
 
@@ -9,12 +9,12 @@ def create_list(message):
     list_ = dict(collections.Counter(message))
 
     # descending order
-    list_sorted = sorted(list_.items(), key=lambda (k, v): (v, k), reverse=True)
+    list_sorted = sorted(list_.items(),  reverse=True)
 
-    #format list [letter, frequency, code]
+    # format list [letter, frequency, code]
     final_list = []
     for key, value in list_sorted:
-        final_list.append([key, value, ''])
+        final_list.append([key, value])
 
     return final_list
 
@@ -25,19 +25,19 @@ def divide_list(list_):
     else:
         n = 0
         for i in list_:
-            n += i[1]
+            n += i[1]  # sum of frequency (probability)
         x = 0
         distance = abs(2 * x - n)
         j = 0
-        for i in xrange(len(list_)):
+        for i in range(len(list_)):
             x += list_[i][1]
-            if distance < abs(2 * x - n):
+            if distance < abs(2 * x - n):  # making sure that right and left side are similar
                 j = i
-    return list_[0:j + 1], list_[j + 1 :]
+    return list_[0:j + 1], list_[j + 1:]
 
 
 def label_list(list_):
-    code_book=[]
+    code_book = []
     l1, l2 = divide_list(list_)
     for i in l1:
         i[2] += '0'
@@ -45,10 +45,11 @@ def label_list(list_):
     for i in l2:
         i[2] += '1'
         code_book[i[0]] = i[2]
-    print ("Label Iter - ", code_book)
+    print("Label Iter - ", code_book)
     if len(l1) == 1 and len(l2) == 1:
         return
     label_list(l2)
     return code_book
 
-create_list("mississippi")
+
+print(label_list(create_list("mississippi")))
