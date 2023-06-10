@@ -1,55 +1,56 @@
-# This code use Shannon Fano Coding in order to compress word 
-# basicly this method uses 5-step process which is:
-# LIST -> SORT -> DIVIDE -> LABEL -> REPEAT
-import collections
+def shannon_fano(input_str):
+    # Counting the frequency of characters
+    freq = {}
+    for char in input_str:
+        if char in freq:
+            freq[char] += 1
+        else:
+            freq[char] = 1
+
+    # Sort characters based on frequency
+    sorted_freq = sorted(freq.items(), key=lambda x: x[1], reverse=True)
+
+    # Divide and conquer approach to assign 0's and 1's for characters
+    left = 0
+    right = len(sorted_freq) - 1
+    threshold = 0
+    result = {}
+    for char in freq.keys():
+        result[char] = ''
+
+    for i, item in enumerate(sorted_freq):
+        char, f = item
+        threshold += f
+        if i != right and threshold >= sum([freq[item[0]] for item in sorted_freq[left:i + 1]]) / 2:
+            if i - left == 1:
+                result[sorted_freq[left][0]] += '0'
+            else:
+                for j in range(left, i):
+                    result[sorted_freq[j][0]] += '0'
+            for j in range(i, right + 1):
+                result[sorted_freq[j][0]] += '1'
+            left = i + 1
+            threshold = 0
+
+    # Assign 0's and 1's to characters remaining in the list
+    for i in range(left):
+        result[sorted_freq[i][0]] += '0'
+
+    return result
 
 
-def create_list(message):
-    # list keeps letters frequency
-    list_ = dict(collections.Counter(message))
+input_str = input("Enter a string to encode: ")
+result = shannon_fano(input_str)
 
-    # descending order
-    list_sorted = sorted(list_.items(),  reverse=True)
+print(input_str)
 
-    # format list [letter, frequency, code]
-    final_list = []
-    for key, value in list_sorted:
-        final_list.append([key, value])
-
-    return final_list
+# Print the code for encoding each character
+for char in sorted(result.keys()):
+    print(char + ': ' + result[char])
 
 
-def divide_list(list_):
-    if len(list_) == 2:
-        return [list_[0]], [list_[1]]
-    else:
-        n = 0
-        for i in list_:
-            n += i[1]  # sum of frequency (probability)
-        x = 0
-        distance = abs(2 * x - n)
-        j = 0
-        for i in range(len(list_)):
-            x += list_[i][1]
-            if distance < abs(2 * x - n):  # making sure that right and left side are similar
-                j = i
-    return list_[0:j + 1], list_[j + 1:]
 
 
-def label_list(list_):
-    code_book = []
-    l1, l2 = divide_list(list_)
-    for i in l1:
-        i[2] += '0'
-        code_book[i[0]] = i[2]
-    for i in l2:
-        i[2] += '1'
-        code_book[i[0]] = i[2]
-    print("Label Iter - ", code_book)
-    if len(l1) == 1 and len(l2) == 1:
-        return
-    label_list(l2)
-    return code_book
 
 
-print(label_list(create_list("mississippi")))
+
