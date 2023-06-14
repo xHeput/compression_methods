@@ -40,7 +40,7 @@ def createTree(text):
     for c in occurences.keys():  # tworzymy liście drzewa, bazując na znakach i ich ilości wystąpień, 
         node = Node(occurences[c], c)  # a następnei dodajmy do listy
         nodes.put(node)
-    rootNode = None  # docelowy korzen drzewa
+    root_node = None  # docelowy korzen drzewa
     while nodes.qsize() > 1:  # następnie iterujemy, dopóki w nodes nie zostanie ostatni element - korzeń drzewa
         n1 = nodes.get()  # pobieramy pierwszy, najmniejszy element z PriorityQueue
         n2 = nodes.get()  # pobieramy kolejny, najmniejszy element z PriorityQueue
@@ -48,11 +48,11 @@ def createTree(text):
 # to powinien on być traktowany jako większy element
        
         parent = Node(n1.value + n2.value, "")  # tworzymy liść-kontener, będzie przechowywać dwa n1, n2 i sumę
-        rootNode = parent  # ustawiamy go na aktualny korzen
+        root_node = parent  # ustawiamy go na aktualny korzen
         parent.left = n1  # i dodajemy mu dzieci
         parent.right = n2
         nodes.put(parent)  # a następnie dodajemy go do PriorityQueue
-    return rootNode  # nasze drzewo jest gotowe - zwracamy korzeń
+    return root_node  # nasze drzewo jest gotowe - zwracamy korzeń
  
  
 # tworzy drzewo i od razu koduje każdy ze znaków
@@ -88,9 +88,9 @@ def decode(root, text):
 
 
 word = input("Kodowanie Huffmana. Podaj tekst, który chcesz zakodować:").rstrip()
-rootNode = createTree(word)
+root_node = createTree(word)
 print("Oto tablica kodowania:")
-word = encodeValues(rootNode, "", word)
+word = encodeValues(root_node, "", word)
 print("Oto tekst po zakodowaniu: " + word)
-word = decode(rootNode, word)
+word = decode(root_node, word)
 print("Oto odkodowany tekst: " + word)
