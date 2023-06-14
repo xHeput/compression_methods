@@ -1,96 +1,109 @@
 from queue import PriorityQueue
- 
- 
+from tabulate import tabulate
+
+
 class Node:
     value = 0
     right = None
     left = None
     character = ""
- 
-    def isLeaf(self):  # sprawdzenie czy są znaki
+
+    # Check if the node is a leaf node (contains a character)
+    def isLeaf(self):
         return self.character != ""
- 
-    def __init__(self, val, ch):  # def konstruktor
+
+    # Initialize a node with a value and character
+    def __init__(self, val, ch):
         self.value = val
         self.character = ch
- 
-    # sprawdzenie czy nie ma 2 takich samych znaków i ew uporządkowanie ich 
+
+    # Define the less than comparison for nodes
     def __lt__(self, other):
-        if self.value != other.value:  # wykonujemy normalne porównanie, jeżeli liście są różne;
+        if self.value != other.value:
             return self.value > other.value
-        if not self.isLeaf() and other.isLeaf(): 
+        if not self.isLeaf() and other.isLeaf():
             return True
-        if self.isLeaf() and not other.isLeaf(): 
+        if self.isLeaf() and not other.isLeaf():
             return False
-        if self.isLeaf() and other.isLeaf():  # jeżeli jednak oba maja znak, to decyduje kolejność alfabetyczna
+        if self.isLeaf() and other.isLeaf():
             return ord(self.character[0]) > ord(other.character[0])
         return True
- 
- 
-# zwraca korzen drzewa
+
+
 def createTree(text):
     occurences = {}
-    for c in text:  # zliczamy wystąpienia każdego znaku w tekście
+    # Count the occurrences of each character in the text
+    for c in text:
         if occurences.__contains__(c):
             occurences[c] += 1
         else:
             occurences[c] = 1
-# PriorityQueue działa jak taki stos, zawsze na górze ma najmniejsza wartoc 
+
     nodes = PriorityQueue()
-    for c in occurences.keys():  # tworzymy liście drzewa, bazując na znakach i ich ilości wystąpień, 
-        node = Node(occurences[c], c)  # a następnei dodajmy do listy
+    # Create leaf nodes based on characters and their occurrences
+    for c in occurences.keys():
+        node = Node(occurences[c], c)
         nodes.put(node)
-    root_node = None  # docelowy korzen drzewa
-    while nodes.qsize() > 1:  # następnie iterujemy, dopóki w nodes nie zostanie ostatni element - korzeń drzewa
-        n1 = nodes.get()  # pobieramy pierwszy, najmniejszy element z PriorityQueue
-        n2 = nodes.get()  # pobieramy kolejny, najmniejszy element z PriorityQueue
-# jeżeli oba liście mają tą samą wartość, a jeden z nich jest kontenerem,
-# to powinien on być traktowany jako większy element
-       
-        parent = Node(n1.value + n2.value, "")  # tworzymy liść-kontener, będzie przechowywać dwa n1, n2 i sumę
-        root_node = parent  # ustawiamy go na aktualny korzen
-        parent.left = n1  # i dodajemy mu dzieci
+    root_node = None
+    # Build the Huffman tree by combining nodes
+    while nodes.qsize() > 1:
+        n1 = nodes.get()
+        n2 = nodes.get()
+
+        parent = Node(n1.value + n2.value, "")
+        root_node = parent
+        parent.left = n1
         parent.right = n2
-        nodes.put(parent)  # a następnie dodajemy go do PriorityQueue
-    return root_node  # nasze drzewo jest gotowe - zwracamy korzeń
- 
- 
-# tworzy drzewo i od razu koduje każdy ze znaków
-def encodeValues(n, str, txt):
-    if n is None: 
+        nodes.put(parent)
+    return root_node
+
+
+def encodeValues(n, str_, txt, table_):
+    if n is None:
         return txt
     if n.isLeaf():
-        print(n.character + " : " + str)
-        txt = txt.replace(n.character, str) 
-    txt = encodeValues(n.left, str + "0", txt) 
-    txt = encodeValues(n.right, str + "1", txt) 
-    return txt 
- 
- 
-# definiujemy funkcję, która odkoduje tekst na bazie utworzonego drzewa
+        # Encode the values and populate the table with symbols, frequencies, and Huffman codes
+        table_.append([n.character, n.value, str_])
+        txt = txt.replace(n.character, str_)
+    txt = encodeValues(n.left, str_ + "0", txt, table_)
+    txt = encodeValues(n.right, str_ + "1", txt, table_)
+    return txt
+
+
 def decode(root, text):
-    decoded = "" 
-    curr_node = root 
-    for char in text: 
-        if char == '0': 
-            if curr_node.left.isLeaf(): 
-                decoded += curr_node.left.character 
-                curr_node = root 
+    decoded = ""
+    curr_node = root
+    for char in text:
+        # Decode the text based on the Huffman tree
+        if char == '0':
+            if curr_node.left.isLeaf():
+                decoded += curr_node.left.character
+                curr_node = root
             else:
-                curr_node = curr_node.left 
+                curr_node = curr_node.left
         else:
-            if curr_node.right.isLeaf(): 
-                decoded += curr_node.right.character  # to dodajemy jego znak do zmiennej pomocniczej
-                curr_node = root  # a następnie wracamy na początek drzewa
+            if curr_node.right.isLeaf():
+                decoded += curr_node.right.character
+                curr_node = root
             else:
-                curr_node = curr_node.right  # jeżeli trafiliśmy na kontener, to od niego zaczniemy nast. iterację
-    return decoded  # zwracamy odkodowana wartosc
+                curr_node = curr_node.right
+    return decoded
 
 
-word = input("Kodowanie Huffmana. Podaj tekst, który chcesz zakodować:").rstrip()
+word = input("Enter the text to encode:").rstrip()
 root_node = createTree(word)
-print("Oto tablica kodowania:")
-word = encodeValues(root_node, "", word)
-print("Oto tekst po zakodowaniu: " + word)
+table = []
+word = encodeValues(root_node, "", word, table)
+print("Here is the encoding table:")
+print(tabulate(table, headers=["Symbols", "Frequencies", "Huffman Codes"]))
+print("Encoded text: " + word)
+
+bit_count_before = len(word) * 8
+bit_count_after = len(word)
+compression_ratio = (bit_count_before - bit_count_after) / bit_count_before * 100
+
 word = decode(root_node, word)
-print("Oto odkodowany tekst: " + word)
+print("Decoded text: " + word)
+print("Bit count before compression: " + str(bit_count_before))
+print("Bit count after compression: " + str(bit_count_after))
+print("Compression ratio: " + str(compression_ratio) + "%")
